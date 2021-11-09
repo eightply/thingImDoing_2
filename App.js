@@ -16,9 +16,7 @@ export default class App extends React.Component {
 
   async componentDidMount() {
     try {
-      const commentsForItem = await AsyncStorage.getItem(
-        ASYNC_STORAGE_COMMENTS_KEY,
-      );
+      const commentsForItem = await AsyncStorage.getItem(ASYNC_STORAGE_COMMENTS_KEY);
 
       this.setState({
         commentsForItem: commentsForItem ? JSON.parse(commentsForItem) : {},
@@ -28,7 +26,7 @@ export default class App extends React.Component {
     }
   }
 
-  onSubmitComment = text => {
+  onSubmitComment = (text) => {
     const { selectedItemId, commentsForItem } = this.state;
     const comments = commentsForItem[selectedItemId] || [];
 
@@ -45,8 +43,19 @@ export default class App extends React.Component {
       console.log('Failed to save comment', text, 'for', selectedItemId);
     }
   };
+  deleteCommentFromSource = (id, item) => {
+    const { selectedItemId, commentsForItem } = this.state;
+    // here we need to delete the comment from the state
+    const updatedCommentList = commentsForItem[selectedItemId].filter((comment) => {
+      if ( comment !== item) {
+        return comment;
+      }
+    });
+    console.log(updatedCommentList);
+    this.setState({ commentsForItem: updatedCommentList })
+  };
 
-  openCommentScreen = id => {
+  openCommentScreen = (id) => {
     this.setState({
       showModal: true,
       selectedItemId: id,
@@ -65,17 +74,11 @@ export default class App extends React.Component {
 
     return (
       <View style={styles.container}>
-        <Feed
-          style={styles.feed}
-          commentsForItem={commentsForItem}
-          onPressComments={this.openCommentScreen}
-        />
-        <Modal
-          visible={showModal}
-          animationType="slide"
-          onRequestClose={this.closeCommentScreen}
-        >
+        <Feed style={styles.feed} commentsForItem={commentsForItem} onPressComments={this.openCommentScreen} />
+        <Modal visible={showModal} animationType="slide" onRequestClose={this.closeCommentScreen}>
+          {/* <Comments style={styles.comments} comments={commentsForItem[selectedItemId] || []} onClose={this.closeCommentScreen} onSubmitComment={this.onSubmitComment} /> */}
           <Comments
+            deleteCommentFromSource={this.deleteCommentFromSource}
             style={styles.comments}
             comments={commentsForItem[selectedItemId] || []}
             onClose={this.closeCommentScreen}
@@ -87,8 +90,7 @@ export default class App extends React.Component {
   }
 }
 
-const platformVersion =
-  Platform.OS === 'ios' ? parseInt(Platform.Version, 10) : Platform.Version;
+// const platformVersion = Platform.OS === 'ios' ? parseInt(Platform.Version, 10) : Platform.Version;
 
 const styles = StyleSheet.create({
   container: {
@@ -97,16 +99,10 @@ const styles = StyleSheet.create({
   },
   feed: {
     flex: 1,
-    marginTop:
-      Platform.OS === 'android' || platformVersion < 11
-        ? Constants.statusBarHeight
-        : 0,
+    marginTop: 0,
   },
   comments: {
     flex: 1,
-    marginTop:
-      Platform.OS === 'ios' && platformVersion < 11
-        ? Constants.statusBarHeight
-        : 0,
+    marginTop: 0,
   },
 });
